@@ -63,7 +63,7 @@ jobs:
                 
             run: |
                 aws s3 sync ./web-apps/deploy/web-apps/apps/  \
-                ${{secrets.AWS_BUCKET_URL}}${{URI} \
+                ${{secrets.AWS_BUCKET_URL}}${URI} \
                 --acl public-read \
                 --metadata-directive REPLACE
 
