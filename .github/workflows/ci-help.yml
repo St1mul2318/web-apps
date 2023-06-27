@@ -48,37 +48,32 @@ jobs:
             run: |
                 BRANCH_NAME=${GITHUB_REF#refs/heads/}
                 export TAG=${BRANCH_NAME#*/}
-                echo "tag=$TAG" >> $GITHUB_OUTPUT
-                export MAIN_DIR="/install/desktop/editors/help"
-                echo "main_dir=$MAIN_DIR" >> $GITHUB_OUTPUT
-
+                echo "URI=/install/desktop/editors/help/$TAG/apps" >> $GITHUB_OUTPUT
+                
           - name: Build
             run: |
-                cd web-apps
-                npm install --prefix build
-                cd build
+                cd web-apps/build
                 ./sprites.sh
                 npm install
                 grunt
 
           - name: Upload
             env:
-                TAG: ${{steps.branch-tag.outputs.tag}}
-                MAIN_DIR: ${{steps.branch-tag.outputs.main_dir}}
+                URI: ${{steps.branch-tag.outputs.URI}}
+                
             run: |
                 aws s3 sync ./web-apps/deploy/web-apps/apps/  \
-                ${{secrets.AWS_BUCKET_URL}}${MAIN_DIR}/${TAG}/apps \
+                ${{secrets.AWS_BUCKET_URL}}${{URI} \
                 --acl public-read \
                 --metadata-directive REPLACE
 
 
           - name: Invalidate AWS CLOUDFRONT cache
             env:
-                TAG: ${{steps.branch-tag.outputs.tag}}
-                MAIN_DIR: ${{steps.branch-tag.outputs.tag}}
+                URI: ${{steps.branch-tag.outputs.URI}}
             run: |
                 aws cloudfront create-invalidation \
                     --distribution-id ${{ secrets.AWS_DISTRIBUTION_ID }} \
                     --paths \
-                    "${MAIN_DIR}/${TAG}/apps/*"
+                    "${URI}/*"
 
