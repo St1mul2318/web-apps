@@ -1,13 +1,13 @@
 name: "Build and upload helps"
 
 on:
-    create:
+  #create:
     push:
-        branches:
-            - 'release/*'
-            - 'hotfix/*'
-        paths:
-            - '**/resources/help/**'
+      #branches:
+      #     - 'release/*'
+      #     - 'hotfix/*'
+      # paths:
+      #     - '**/resources/help/**'
 
 
 jobs:
