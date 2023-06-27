@@ -14,7 +14,7 @@ jobs:
     build-help:
         name: "Build Apps and upload"
         runs-on: ubuntu-latest
-          #if: startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/heads/hotfix')
+        if: startsWith(github.ref, 'refs/heads/release/') || startsWith(github.ref, 'refs/heads/hotfix')
         steps:
 
           - name: Checkout Web-Apps
@@ -49,6 +49,8 @@ jobs:
                 BRANCH_NAME=${GITHUB_REF#refs/heads/}
                 export TAG=${BRANCH_NAME#*/}
                 echo "tag=$TAG" >> $GITHUB_OUTPUT
+                export MAIN_DIR="/install/desktop/editors/help"
+                echo "main_dir=$MAIN_DIR" >> $GITHUB_OUTPUT
 
           - name: Build
             run: |
@@ -62,9 +64,10 @@ jobs:
           - name: Upload
             env:
                 TAG: ${{steps.branch-tag.outputs.tag}}
+                MAIN_DIR: ${{steps.branch-tag.outputs.main_dir}}
             run: |
                 aws s3 sync ./web-apps/deploy/web-apps/apps/  \
-                ${{secrets.AWS_BUCKET_URL}}/install/desktop/editors/help/${TAG}/apps \
+                ${{secrets.AWS_BUCKET_URL}}${MAIN_DIR}/${TAG}/apps \
                 --acl public-read \
                 --metadata-directive REPLACE
 
@@ -72,9 +75,10 @@ jobs:
           - name: Invalidate AWS CLOUDFRONT cache
             env:
                 TAG: ${{steps.branch-tag.outputs.tag}}
+                MAIN_DIR: ${{steps.branch-tag.outputs.tag}}
             run: |
                 aws cloudfront create-invalidation \
                     --distribution-id ${{ secrets.AWS_DISTRIBUTION_ID }} \
                     --paths \
-                    "/install/desktop/editors/help/${TAG}/apps/*"
+                    "${MAIN_DIR}/${TAG}/apps/*"
 
